@@ -1,0 +1,27 @@
+{
+  "name": "blue-lotus-saas-backend",
+  "version": "2.0.0",
+  "description": "Production SaaS backend for Blue Lotus AI - Multi-tenant with event-driven architecture",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "build": "bun build src/index.ts --outdir ./dist --target bun",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.3",
+    "@supabase/supabase-js": "^2.39.0",
+    "bullmq": "^5.1.0",
+    "cors": "^2.8.5",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
