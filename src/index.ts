@@ -19,6 +19,7 @@ const PORT = process.env.PORT || 3001;
  */
 const server = Bun.serve({
   port: PORT,
+  hostname: '0.0.0.0', // Listen on all interfaces (required for Railway)
   async fetch(request) {
     const url = new URL(request.url);
 
