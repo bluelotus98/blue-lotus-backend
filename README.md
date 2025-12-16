@@ -26,7 +26,7 @@ Production-ready backend for Blue Lotus AI platform using Bun, Supabase, and eve
 - **Runtime**: Bun (fast JavaScript/TypeScript runtime)
 - **Database**: Supabase (PostgreSQL with RLS)
 - **Queue**: BullMQ + Redis (async job processing)
-- **AI**: Anthropic Claude Sonnet 4.5
+- **AI**: OpenAI GPT-4o
 - **Deployment**: Railway / Fly.io / Render
 
 ## Project Structure
@@ -94,8 +94,8 @@ REDIS_HOST=your-redis.upstash.io
 REDIS_PORT=6379
 REDIS_PASSWORD=your_password
 
-# Anthropic Claude API
-ANTHROPIC_API_KEY=sk-ant-api03-xxx
+# OpenAI API (GPT-4o)
+OPENAI_API_KEY=sk-xxx
 
 # Server
 PORT=3001
