@@ -7,12 +7,22 @@
 import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 
-// Redis connection
+// Redis connection with timeouts for Railway compatibility
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
   maxRetriesPerRequest: null, // Required for BullMQ
+  connectTimeout: 2000, // 2 second connection timeout
+  lazyConnect: true, // Don't connect until first command
+  retryStrategy: (times) => {
+    // Stop retrying after 3 attempts
+    if (times > 3) {
+      console.error('[Queue] Redis connection failed after 3 attempts');
+      return null;
+    }
+    return Math.min(times * 100, 1000);
+  },
 });
 
 // Job queues
@@ -71,24 +81,40 @@ export async function publishJob(
 
 /**
  * Get queue statistics
+ * Returns null if Redis is unavailable (graceful degradation)
  */
 export async function getQueueStats() {
-  const [waiting, active, completed, failed, delayed] = await Promise.all([
-    aiProcessingQueue.getWaitingCount(),
-    aiProcessingQueue.getActiveCount(),
-    aiProcessingQueue.getCompletedCount(),
-    aiProcessingQueue.getFailedCount(),
-    aiProcessingQueue.getDelayedCount(),
-  ]);
+  try {
+    // Add timeout to prevent hanging
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Redis timeout')), 3000)
+    );
 
-  return {
-    waiting,
-    active,
-    completed,
-    failed,
-    delayed,
-    total: waiting + active + completed + failed + delayed,
-  };
+    const statsPromise = Promise.all([
+      aiProcessingQueue.getWaitingCount(),
+      aiProcessingQueue.getActiveCount(),
+      aiProcessingQueue.getCompletedCount(),
+      aiProcessingQueue.getFailedCount(),
+      aiProcessingQueue.getDelayedCount(),
+    ]);
+
+    const [waiting, active, completed, failed, delayed] = await Promise.race([
+      statsPromise,
+      timeout,
+    ]);
+
+    return {
+      waiting,
+      active,
+      completed,
+      failed,
+      delayed,
+      total: waiting + active + completed + failed + delayed,
+    };
+  } catch (error) {
+    console.error('[Queue] Failed to get stats (Redis unavailable):', error);
+    return null;
+  }
 }
 
 /**

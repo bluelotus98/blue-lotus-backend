@@ -72,22 +72,23 @@ const server = Bun.serve({
     // Health check
     if (url.pathname === '/health') {
       const queueStats = await getQueueStats();
+      const redisHealthy = queueStats !== null;
 
       return new Response(
         JSON.stringify({
-          status: 'healthy',
+          status: redisHealthy ? 'healthy' : 'degraded',
           timestamp: new Date().toISOString(),
           uptime: process.uptime(),
           version: '2.0.0',
           environment: process.env.NODE_ENV || 'development',
-          queue: queueStats,
+          queue: queueStats || { error: 'Redis unavailable' },
           checks: {
             database: true, // TODO: Add actual health check
-            redis: true, // TODO: Add actual health check
+            redis: redisHealthy,
           },
         }),
         {
-          status: 200,
+          status: 200, // Always return 200 to prevent Railway restarts
           headers: { ...headers, 'Content-Type': 'application/json' },
         }
       );
