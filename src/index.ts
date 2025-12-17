@@ -109,15 +109,15 @@ const server = Bun.serve({
 
     // Demo dashboard route (for testing without custom domain)
     if (url.pathname === '/demo') {
-      // Create a mock request with demo subdomain
+      // Use X-Business-ID header fallback (dev mode)
       const mockHeaders = new Headers(request.headers);
-      mockHeaders.set('host', 'demo.bluelotussolutions.ai');
+      mockHeaders.set('X-Business-ID', 'demo-001');
       const mockRequest = new Request(request.url.replace('/demo', '/'), {
         method: request.method,
         headers: mockHeaders,
         body: request.body,
       });
-      console.log('[Dashboard] Serving demo dashboard');
+      console.log('[Dashboard] Serving demo dashboard with business ID: demo-001');
       return serveDashboard(mockRequest);
     }
 
