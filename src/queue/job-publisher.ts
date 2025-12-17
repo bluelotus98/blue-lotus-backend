@@ -8,22 +8,37 @@ import { Queue } from 'bullmq';
 import Redis from 'ioredis';
 
 // Redis connection with timeouts for Railway compatibility
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null, // Required for BullMQ
-  connectTimeout: 2000, // 2 second connection timeout
-  lazyConnect: true, // Don't connect until first command
-  retryStrategy: (times) => {
-    // Stop retrying after 3 attempts
-    if (times > 3) {
-      console.error('[Queue] Redis connection failed after 3 attempts');
-      return null;
-    }
-    return Math.min(times * 100, 1000);
-  },
-});
+// Supports both REDIS_URL (e.g., redis://user:pass@host:port) and individual variables
+const redis = process.env.REDIS_URL
+  ? new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: null, // Required for BullMQ
+      connectTimeout: 2000, // 2 second connection timeout
+      lazyConnect: true, // Don't connect until first command
+      retryStrategy: (times) => {
+        // Stop retrying after 3 attempts
+        if (times > 3) {
+          console.error('[Queue] Redis connection failed after 3 attempts');
+          return null;
+        }
+        return Math.min(times * 100, 1000);
+      },
+    })
+  : new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      maxRetriesPerRequest: null, // Required for BullMQ
+      connectTimeout: 2000, // 2 second connection timeout
+      lazyConnect: true, // Don't connect until first command
+      retryStrategy: (times) => {
+        // Stop retrying after 3 attempts
+        if (times > 3) {
+          console.error('[Queue] Redis connection failed after 3 attempts');
+          return null;
+        }
+        return Math.min(times * 100, 1000);
+      },
+    });
 
 // Job queues
 const aiProcessingQueue = new Queue('ai-processing', {
