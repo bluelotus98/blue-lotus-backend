@@ -107,6 +107,20 @@ const server = Bun.serve({
     // DASHBOARD SERVING (Multi-Tenant)
     // =========================================================================
 
+    // Demo dashboard route (for testing without custom domain)
+    if (url.pathname === '/demo') {
+      // Create a mock request with demo subdomain
+      const mockHeaders = new Headers(request.headers);
+      mockHeaders.set('host', 'demo.bluelotussolutions.ai');
+      const mockRequest = new Request(request.url.replace('/demo', '/'), {
+        method: request.method,
+        headers: mockHeaders,
+        body: request.body,
+      });
+      console.log('[Dashboard] Serving demo dashboard');
+      return serveDashboard(mockRequest);
+    }
+
     // Serve dashboard HTML (root path with subdomain)
     if (url.pathname === '/' || url.pathname === '/dashboard') {
       const subdomain = extractSubdomain(request.headers.get('host'));
